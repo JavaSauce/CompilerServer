@@ -1,6 +1,5 @@
-package net.javasauce.compilerserver.util;
+package net.javasauce.compilerserver;
 
-import net.javasauce.compilerserver.Compiler;
 import net.javasauce.compilerserver.packet.CompileRequestPacket;
 import net.javasauce.compilerserver.packet.CompileResultPacket;
 
@@ -19,7 +18,7 @@ import java.util.Set;
  * <p>
  * Created by covers1624 on 8/29/25.
  */
-public class SaferObjectInputStream extends ObjectInputStream {
+class SaferObjectInputStream extends ObjectInputStream {
 
     public final Set<String> allowedClasses = new HashSet<>();
     public final List<String> allowedPackages = new ArrayList<>();

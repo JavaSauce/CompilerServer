@@ -1,4 +1,4 @@
-package net.javasauce.compilerserver.util;
+package net.javasauce.compilerserver;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -31,7 +31,7 @@ import java.util.zip.ZipFile;
  * This implementation of shared classpath lacks the ability for javac to inherit the running JVM's classpath.
  */
 // TODO support jmods? Tried to do this before, quite complicated and weird.
-public class FastJavacClasspathIndex implements Closeable {
+class FastJavacClasspathIndex implements Closeable {
 
     private final List<ZipFile> openZips = new ArrayList<>();
     private final Map<JavaFileManager.Location, Map<String, List<JavaFileObject>>> index = new HashMap<>();
