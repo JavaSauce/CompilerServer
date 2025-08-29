@@ -2,7 +2,6 @@ package net.javasauce.compilerserver;
 
 import net.javasauce.compilerserver.packet.CompileRequestPacket;
 import net.javasauce.compilerserver.packet.CompileResultPacket;
-import net.javasauce.compilerserver.util.SaferObjectInputStream;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;

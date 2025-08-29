@@ -1,18 +1,16 @@
 package net.javasauce.compilerserver;
 
-import net.javasauce.compilerserver.util.FastJavacClasspathIndex;
-import net.javasauce.compilerserver.util.JVMUtils;
-import net.javasauce.compilerserver.util.StringSource;
 import org.jetbrains.annotations.Nullable;
 
 import javax.tools.*;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.StringWriter;
+import java.io.*;
 import java.net.URI;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Created by covers1624 on 8/29/25.
@@ -27,8 +25,17 @@ class LocalCompiler implements Compiler {
         for (Path path : compileClasspath) {
             index.addPath(StandardLocation.CLASS_PATH, path);
         }
-        for (Path e : JVMUtils.getRuntimeJREPaths()) {
-            index.addPath(StandardLocation.PLATFORM_CLASS_PATH, e);
+        // TODO, FastJavacClasspathIndex doesn't support jmods. So, only handle the bootstrap classpath here.
+        String bootClasspath = System.getProperty("sun.boot.class.path");
+        if (bootClasspath != null) {
+            List<Path> paths = Stream.of(bootClasspath.split(File.pathSeparator))
+                    .distinct()
+                    .map(Paths::get)
+                    .filter(Files::exists)
+                    .collect(Collectors.toList());
+            for (Path path : paths) {
+                index.addPath(StandardLocation.PLATFORM_CLASS_PATH, path);
+            }
         }
         compiler = ToolProvider.getSystemJavaCompiler();
     }
@@ -106,5 +113,20 @@ class LocalCompiler implements Compiler {
                 return super.getClassLoader(location);
             }
         };
+    }
+
+    private static class StringSource extends SimpleJavaFileObject {
+
+        private final String content;
+
+        public StringSource(URI uri, String content) {
+            super(uri, Kind.SOURCE);
+            this.content = content;
+        }
+
+        @Override
+        public CharSequence getCharContent(boolean ignoreEncodingErrors) {
+            return content;
+        }
     }
 }

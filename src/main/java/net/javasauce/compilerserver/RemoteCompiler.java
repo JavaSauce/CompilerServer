@@ -2,7 +2,6 @@ package net.javasauce.compilerserver;
 
 import net.javasauce.compilerserver.packet.CompileRequestPacket;
 import net.javasauce.compilerserver.packet.CompileResultPacket;
-import net.javasauce.compilerserver.util.SaferObjectInputStream;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
