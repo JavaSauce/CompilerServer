@@ -33,7 +33,7 @@ class RemoteCompiler implements Compiler {
 
     private final Process process;
     private final ObjectOutputStream out;
-    private final SaferObjectInputStream in;
+    private final RemoteCompilerObjectInputStream in;
 
     private final Thread readThread;
     private final Thread logThread;
@@ -86,7 +86,7 @@ class RemoteCompiler implements Compiler {
         LOGGER.info("RemoteCompiler started!");
 
         LOGGER.info("Negotiating..");
-        in = new SaferObjectInputStream(process.getInputStream());
+        in = new RemoteCompilerObjectInputStream(process.getInputStream());
         out = new ObjectOutputStream(process.getOutputStream());
         out.flush();
 
