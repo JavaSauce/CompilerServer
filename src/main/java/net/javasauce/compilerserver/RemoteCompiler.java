@@ -40,7 +40,7 @@ class RemoteCompiler implements Compiler {
 
     private boolean exitRequested;
 
-    public RemoteCompiler(Path javaExecutable, List<Path> compileClasspath) throws IOException {
+    public RemoteCompiler(Path javaExecutable, Collection<Path> compileClasspath) throws IOException {
         Path ourJarPath = getOurPath();
         if (OVERRIDE_PATH != null) {
             ourJarPath = Paths.get(OVERRIDE_PATH);
