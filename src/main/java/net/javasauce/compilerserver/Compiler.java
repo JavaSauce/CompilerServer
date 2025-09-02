@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.net.URI;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -25,7 +26,7 @@ public interface Compiler extends AutoCloseable {
      * @param compileClasspath The compile classpath to use.
      * @return The Compiler.
      */
-    static Compiler of(Path javaExecutable, List<Path> compileClasspath) throws IOException {
+    static Compiler of(Path javaExecutable, Collection<Path> compileClasspath) throws IOException {
         return new RemoteCompiler(javaExecutable, compileClasspath);
     }
 
@@ -35,7 +36,7 @@ public interface Compiler extends AutoCloseable {
      * @param compileClasspath The compile classpath to use.
      * @return The Compiler.
      */
-    static Compiler forLocal(List<Path> compileClasspath) throws IOException {
+    static Compiler forLocal(Collection<Path> compileClasspath) throws IOException {
         return new LocalCompiler(compileClasspath);
     }
 

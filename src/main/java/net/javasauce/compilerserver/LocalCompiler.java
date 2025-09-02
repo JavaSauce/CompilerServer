@@ -20,7 +20,7 @@ class LocalCompiler implements Compiler {
     private final FastJavacClasspathIndex index;
     private final JavaCompiler compiler;
 
-    public LocalCompiler(List<Path> compileClasspath) throws IOException {
+    public LocalCompiler(Collection<Path> compileClasspath) throws IOException {
         index = new FastJavacClasspathIndex();
         for (Path path : compileClasspath) {
             index.addPath(StandardLocation.CLASS_PATH, path);
