@@ -7,9 +7,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.PrintStream;
-import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -39,7 +37,7 @@ public class RemoteMain {
         }
     });
     private final ObjectOutputStream out;
-    private final SaferObjectInputStream in;
+    private final RemoteCompilerObjectInputStream in;
     private final Compiler compiler;
 
     private transient boolean running = true;
@@ -66,7 +64,7 @@ public class RemoteMain {
                 .collect(Collectors.toList()));
         out = new ObjectOutputStream(System.out);
         out.flush();
-        in = new SaferObjectInputStream(System.in);
+        in = new RemoteCompilerObjectInputStream(System.in);
         logger.println("RemoteCompiler ready for commands.");
     }
 

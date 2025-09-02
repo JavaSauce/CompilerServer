@@ -18,12 +18,12 @@ import java.util.Set;
  * <p>
  * Created by covers1624 on 8/29/25.
  */
-class SaferObjectInputStream extends ObjectInputStream {
+class RemoteCompilerObjectInputStream extends ObjectInputStream {
 
     public final Set<String> allowedClasses = new HashSet<>();
     public final List<String> allowedPackages = new ArrayList<>();
 
-    public SaferObjectInputStream(InputStream is) throws IOException {
+    public RemoteCompilerObjectInputStream(InputStream is) throws IOException {
         super(is);
         allowedClasses.add("boolean");
         allowedClasses.add("byte");
