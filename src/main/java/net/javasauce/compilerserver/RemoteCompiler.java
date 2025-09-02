@@ -51,10 +51,7 @@ class RemoteCompiler implements Compiler {
 
         List<String> args = new ArrayList<>(Arrays.asList(
                 javaExecutable.toAbsolutePath().toString(),
-                "-ea",
-                "-Dnet.javasauce.CompileServer.compile_classpath=" + compileClasspath.stream()
-                        .map(e -> e.toAbsolutePath().toString())
-                        .collect(Collectors.joining(File.pathSeparator))
+                "-ea"
         ));
         if (DEBUG) {
             args.add("-Dnet.javasauce.RemoteCompiler.debug=true");
@@ -63,6 +60,10 @@ class RemoteCompiler implements Compiler {
         args.add("-cp");
         args.add(ourJarPath.toAbsolutePath().toString());
         args.add(RemoteMain.class.getName());
+        args.addAll(compileClasspath.stream()
+                .map(e -> e.toAbsolutePath().toString())
+                .collect(Collectors.toList())
+        );
 
         ProcessBuilder builder = new ProcessBuilder(args);
         LOGGER.info("Starting Java compiler on vm {}", javaExecutable.toAbsolutePath());

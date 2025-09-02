@@ -4,11 +4,12 @@ import net.javasauce.compilerserver.packet.CompileRequestPacket;
 import net.javasauce.compilerserver.packet.CompileResultPacket;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.PrintStream;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -52,22 +53,17 @@ public class RemoteMain {
         logger.println("   OS Arch      " + System.getProperty("os.arch"));
         logger.println("   OS Version   " + System.getProperty("os.version"));
         try {
-            new RemoteMain().run();
+            new RemoteMain(args).run();
         } catch (Throwable ex) {
             logger.println("Fatal error.");
             ex.printStackTrace(logger);
         }
     }
 
-    public RemoteMain() throws IOException {
-        String sysProp = System.getProperty("net.javasauce.CompileServer.compile_classpath");
-        if (sysProp == null) throw new RuntimeException("Expected net.javasauce.CompileServer.compile_classpath sysprop.");
-
-        compiler = Compiler.forLocal(Stream.of(sysProp)
-                .flatMap(e -> Stream.of(e.split(File.pathSeparator)))
+    public RemoteMain(String[] args) throws IOException {
+        compiler = Compiler.forLocal(Stream.of(args)
                 .map(Paths::get)
-                .collect(Collectors.toList())
-        );
+                .collect(Collectors.toList()));
         out = new ObjectOutputStream(System.out);
         out.flush();
         in = new SaferObjectInputStream(System.in);
