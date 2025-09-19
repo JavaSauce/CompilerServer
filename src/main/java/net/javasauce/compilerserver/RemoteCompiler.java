@@ -101,10 +101,11 @@ class RemoteCompiler implements Compiler {
                     }
                 }
             } catch (WriteAbortedException | EOFException ex) {
-                if (exitRequested) return;
+                if (exitRequested) return; // Ignore any errors, exit has been requested.
                 LOGGER.error("RemoteCompiler quit unexpectedly.");
                 stop();
             } catch (Throwable ex) {
+                if (exitRequested) return; // Ignore any errors, exit has been requested.
                 System.err.println("Error on read thread.");
                 ex.printStackTrace(System.err);
                 stop();
@@ -154,6 +155,9 @@ class RemoteCompiler implements Compiler {
     }
 
     private void stop() {
+        // Just incase we re-enter somehow, don't lock threads.
+        if (exitRequested) return;
+
         exitRequested = true;
         LOGGER.info("Stopping RemoteCompiler.");
         process.destroy();
