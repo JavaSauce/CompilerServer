@@ -50,17 +50,18 @@ class LocalCompiler implements Compiler {
 
         Map<String, byte[]> outputs = new HashMap<>();
         StringWriter logWriter = new StringWriter();
-        JavaCompiler.CompilationTask task = compiler.getTask(
-                logWriter,
-                getFileManager(compiler, outputs),
-                null,
-                args,
-                null,
-                Collections.singleton(new StringSource(sourceUri, source))
-        );
         boolean result = false;
         Throwable javacCrash = null;
         try {
+            JavaCompiler.CompilationTask task = compiler.getTask(
+                    logWriter,
+                    getFileManager(compiler, outputs),
+                    null,
+                    args,
+                    null,
+                    Collections.singleton(new StringSource(sourceUri, source))
+            );
+
             result = task.call();
         } catch (Throwable ex) {
             javacCrash = ex;
