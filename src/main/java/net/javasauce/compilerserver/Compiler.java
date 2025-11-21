@@ -7,6 +7,7 @@ import java.io.Serializable;
 import java.net.URI;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -27,7 +28,19 @@ public interface Compiler extends AutoCloseable {
      * @return The Compiler.
      */
     static Compiler of(Path javaExecutable, Collection<Path> compileClasspath) throws IOException {
-        return new RemoteCompiler(javaExecutable, compileClasspath);
+        return of(javaExecutable, Collections.emptyList(), compileClasspath);
+    }
+
+    /**
+     * Start a remote Java compiler server.
+     *
+     * @param javaExecutable   The Java executable of the jdk to use. Must have a compiler present.
+     * @param jvmArgs          Any additional JVM arguments.
+     * @param compileClasspath The compile classpath to use.
+     * @return The Compiler.
+     */
+    static Compiler of(Path javaExecutable, List<String> jvmArgs, Collection<Path> compileClasspath) throws IOException {
+        return new RemoteCompiler(javaExecutable, jvmArgs, compileClasspath);
     }
 
     /**

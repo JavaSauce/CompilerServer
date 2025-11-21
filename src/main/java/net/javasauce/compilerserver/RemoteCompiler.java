@@ -40,13 +40,13 @@ class RemoteCompiler implements Compiler {
 
     private boolean exitRequested;
 
-    public RemoteCompiler(Path javaExecutable, Collection<Path> compileClasspath) throws IOException {
+    public RemoteCompiler(Path javaExecutable, List<String> jvmArgs, Collection<Path> compileClasspath) throws IOException {
         Path ourJarPath = getOurPath();
         if (OVERRIDE_PATH != null) {
             ourJarPath = Paths.get(OVERRIDE_PATH);
         }
         if (ourJarPath == null) {
-            throw new RuntimeException("Unable to locate our own jar on the classpath. Please ensure it not shadowed, or provide the RemoteCompiler.jar_path sysprop");
+            throw new RuntimeException("Unable to locate our own jar on the classpath. Please ensure it not shadowed, or provide the 'net.javasauce.RemoteCompiler.jar_Path' sysprop");
         }
 
         List<String> args = new ArrayList<>(Arrays.asList(
@@ -56,6 +56,7 @@ class RemoteCompiler implements Compiler {
         if (DEBUG) {
             args.add("-Dnet.javasauce.RemoteCompiler.debug=true");
         }
+        args.addAll(jvmArgs);
 
         args.add("-cp");
         args.add(ourJarPath.toAbsolutePath().toString());
