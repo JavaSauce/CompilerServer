@@ -49,10 +49,8 @@ class RemoteCompiler implements Compiler {
             throw new RuntimeException("Unable to locate our own jar on the classpath. Please ensure it not shadowed, or provide the 'net.javasauce.RemoteCompiler.jar_Path' sysprop");
         }
 
-        List<String> args = new ArrayList<>(Arrays.asList(
-                javaExecutable.toAbsolutePath().toString(),
-                "-ea"
-        ));
+        List<String> args = new ArrayList<>();
+        args.add(javaExecutable.toAbsolutePath().toString());
         if (DEBUG) {
             args.add("-Dnet.javasauce.RemoteCompiler.debug=true");
         }
