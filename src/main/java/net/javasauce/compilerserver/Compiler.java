@@ -62,7 +62,18 @@ public interface Compiler extends AutoCloseable {
      * @param extraJavacArgs Any additional Java arguments to provide.
      * @return The result.
      */
-    CompileResult compile(URI sourceUri, String source, List<String> extraJavacArgs);
+    default CompileResult compile(URI sourceUri, String source, List<String> extraJavacArgs) {
+        return compile(Collections.singletonList(new CompileUnit(sourceUri, source)), extraJavacArgs);
+    }
+
+    /**
+     * Request multiple compilation units be compiled in a single compiler task.
+     *
+     * @param units          The compilation units to compile.
+     * @param extraJavacArgs Any additional Java arguments to provide.
+     * @return The result.
+     */
+    CompileResult compile(Collection<CompileUnit> units, List<String> extraJavacArgs);
 
     /**
      * Release any resources and stop any sub-processes.
@@ -70,13 +81,31 @@ public interface Compiler extends AutoCloseable {
     @Override
     void close() throws IOException;
 
+    final class CompileUnit implements Serializable {
+
+        /**
+         * The URI describing the location of the source file.
+         * Javac expects that packages are present in this URI.
+         */
+        public final URI sourceUri;
+        /**
+         * The string content of the file.
+         */
+        public final String source;
+
+        public CompileUnit(URI sourceUri, String source) {
+            this.sourceUri = sourceUri;
+            this.source = source;
+        }
+    }
+
     /**
      * The result of a compile operation.
      */
-    class CompileResult implements Serializable {
+    final class CompileResult implements Serializable {
 
         /**
-         * The compiler output for the compilation unit.
+         * The compiler output.
          * <p>
          * Each entry is in the form of relative paths, using forward slashes. E.g: {@code my/package/MyClass.class}
          */

@@ -41,6 +41,7 @@ class RemoteCompilerObjectInputStream extends ObjectInputStream {
         addAllowedClass(URI.class);
         addAllowedClass(CompileRequestPacket.class);
         addAllowedClass(CompileResultPacket.class);
+        addAllowedClass(Compiler.CompileUnit.class);
         addAllowedClass(Compiler.CompileResult.class);
     }
 

@@ -101,13 +101,12 @@ public class RemoteMain {
     }
 
     private void handleCompileRequest(CompileRequestPacket packet) {
-        if (DEBUG) logger.println("Received request " + packet.id + " for " + packet.sourceUri);
+        if (DEBUG) logger.println("Received request " + packet.id + " for " + packet.units.stream().map(e -> e.sourceUri).collect(Collectors.toList()));
         compileExecutor.submit(() -> {
             if (DEBUG) logger.println("Executing request " + packet.id + " on thread " + Thread.currentThread().getName());
             try {
                 Compiler.CompileResult result = compiler.compile(
-                        packet.sourceUri,
-                        packet.source,
+                        packet.units,
                         packet.compilerArgs
                 );
                 writePacket(new CompileResultPacket(packet.id, result));
