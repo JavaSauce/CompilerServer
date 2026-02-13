@@ -131,7 +131,7 @@ class RemoteCompiler implements Compiler {
     }
 
     @Override
-    public CompileResult compile(URI sourceUri, String source, List<String> extraJavacArgs) {
+    public CompileResult compile(Collection<CompileUnit> units, List<String> extraJavacArgs) {
         if (!process.isAlive()) throw new RuntimeException("CompilerServer is dead.");
 
         UUID id = UUID.randomUUID();
@@ -141,9 +141,8 @@ class RemoteCompiler implements Compiler {
         try {
             writePacket(new CompileRequestPacket(
                     id,
-                    sourceUri,
-                    source,
-                    extraJavacArgs
+                    new ArrayList<>(units),
+                    new ArrayList<>(extraJavacArgs)
             ));
         } catch (IOException ex) {
             pending.remove(id);

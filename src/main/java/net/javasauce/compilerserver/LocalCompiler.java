@@ -11,6 +11,7 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
  * Created by covers1624 on 8/29/25.
@@ -41,14 +42,14 @@ class LocalCompiler implements Compiler {
     }
 
     @Override
-    public CompileResult compile(URI sourceUri, String source, List<String> extraJavacArgs) {
+    public CompileResult compile(Collection<CompileUnit> units, List<String> extraJavacArgs) {
         List<String> args = new ArrayList<>();
         args.add("-g");
         args.add("-proc:none");
         args.add("-XDuseUnsharedTable=true");
         args.addAll(extraJavacArgs);
 
-        Map<String, byte[]> outputs = new HashMap<>();
+        Map<String, byte[]> outputs = new LinkedHashMap<>();
         StringWriter logWriter = new StringWriter();
         boolean result = false;
         Throwable javacCrash = null;
@@ -59,7 +60,9 @@ class LocalCompiler implements Compiler {
                     null,
                     args,
                     null,
-                    Collections.singleton(new StringSource(sourceUri, source))
+                    units.stream()
+                            .map(e -> new StringSource(e.sourceUri, e.source))
+                            .collect(Collectors.toList())
             );
 
             result = task.call();
