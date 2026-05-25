@@ -97,6 +97,21 @@ public interface Compiler extends AutoCloseable {
             this.sourceUri = sourceUri;
             this.source = source;
         }
+
+        @Override
+        public boolean equals(Object o) {
+            if (o == null || getClass() != o.getClass()) return false;
+
+            CompileUnit that = (CompileUnit) o;
+            return sourceUri.equals(that.sourceUri) && source.equals(that.source);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = sourceUri.hashCode();
+            result = 31 * result + source.hashCode();
+            return result;
+        }
     }
 
     /**
