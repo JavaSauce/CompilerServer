@@ -2,18 +2,18 @@ package net.javasauce.compilerserver;
 
 import net.javasauce.compilerserver.packet.CompileRequestPacket;
 import net.javasauce.compilerserver.packet.CompileResultPacket;
+import net.javasauce.compilerserver.packet.ConfigureCompilerPacket;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.PrintStream;
-import java.nio.file.Paths;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Main entrypoint for out-of-process, server-like Javac.
@@ -58,14 +58,23 @@ public class RemoteMain {
         }
     }
 
-    public RemoteMain(String[] args) throws IOException {
-        compiler = Compiler.forLocal(Stream.of(args)
-                .map(Paths::get)
-                .collect(Collectors.toList()));
+    public RemoteMain(String[] args) throws IOException, ClassNotFoundException {
         out = new ObjectOutputStream(System.out);
         out.flush();
         in = new RemoteCompilerObjectInputStream(System.in);
         logger.println("RemoteCompiler ready for commands.");
+
+        Object pkt = in.readObject();
+        if (!(pkt instanceof ConfigureCompilerPacket)) {
+            throw new RuntimeException("Expected first packet to be ConfigureCompilerPacket. Got: " + pkt.getClass());
+        }
+        ConfigureCompilerPacket configuration = (ConfigureCompilerPacket) pkt;
+
+        compiler = Compiler.forLocal(
+                configuration.classPath.stream()
+                        .map(File::toPath)
+                        .collect(Collectors.toList())
+        );
     }
 
     private synchronized void writePacket(Object packet) {
