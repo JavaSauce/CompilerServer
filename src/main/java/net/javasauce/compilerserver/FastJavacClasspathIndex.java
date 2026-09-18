@@ -37,6 +37,8 @@ class FastJavacClasspathIndex implements Closeable {
     private final Map<JavaFileManager.Location, Map<String, List<JavaFileObject>>> index = new HashMap<>();
 
     public void addPath(JavaFileManager.Location location, Path path) throws IOException {
+        if (Files.notExists(path)) return;
+
         String fName = path.getFileName().toString();
 
         if (fName.endsWith(".jar") || fName.endsWith(".zip")) {
