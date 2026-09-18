@@ -6,10 +6,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.net.URI;
 import java.nio.file.Path;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * An abstract interface over Java's compiler tooling interface.
@@ -40,7 +37,21 @@ public interface Compiler extends AutoCloseable {
      * @return The Compiler.
      */
     static Compiler of(Path javaExecutable, List<String> jvmArgs, Collection<Path> compileClasspath) throws IOException {
-        return new RemoteCompiler(javaExecutable, jvmArgs, compileClasspath);
+        return of(javaExecutable, jvmArgs, Collections.emptyList(), compileClasspath, Collections.emptyList());
+    }
+
+    /**
+     * Start a remote Java compiler server.
+     *
+     * @param javaExecutable    The Java executable of the jdk to use. Must have a compiler present.
+     * @param jvmArgs           Any additional JVM arguments.
+     * @param args              Compile arguments to be applied to all compile operations.
+     * @param compileClasspath  The compile classpath to use.
+     * @param compileSourcepath The source paths to use.
+     * @return The Compiler.
+     */
+    static Compiler of(Path javaExecutable, List<String> jvmArgs, List<String> args, Collection<Path> compileClasspath, Collection<Path> compileSourcepath) throws IOException {
+        return new RemoteCompiler(javaExecutable, jvmArgs, args, compileClasspath, compileSourcepath);
     }
 
     /**
@@ -50,7 +61,19 @@ public interface Compiler extends AutoCloseable {
      * @return The Compiler.
      */
     static Compiler forLocal(Collection<Path> compileClasspath) throws IOException {
-        return new LocalCompiler(compileClasspath);
+        return forLocal(Collections.emptyList(), compileClasspath, Collections.emptyList());
+    }
+
+    /**
+     * Create a wrapper around the Java compiler on the current jdk.
+     *
+     * @param args              Compile arguments to be applied to all compile operations.
+     * @param compileClasspath  The compile classpath to use.
+     * @param compileSourcepath The source paths to use.
+     * @return The Compiler.
+     */
+    static Compiler forLocal(List<String> args, Collection<Path> compileClasspath, Collection<Path> compileSourcepath) throws IOException {
+        return new LocalCompiler(args, compileClasspath, compileSourcepath);
     }
 
     /**
@@ -126,6 +149,11 @@ public interface Compiler extends AutoCloseable {
          */
         public final Map<String, byte[]> output;
         /**
+         * The internal name of all classpath/sourcepath classes which
+         * were required to compile the given units.
+         */
+        public final Set<String> references;
+        /**
          * If the operation was a success.
          */
         public final boolean success;
@@ -138,8 +166,9 @@ public interface Compiler extends AutoCloseable {
          */
         public final @Nullable Throwable javacCrash;
 
-        public CompileResult(Map<String, byte[]> output, boolean success, String compileLog, @Nullable Throwable javacCrash) {
+        public CompileResult(Map<String, byte[]> output, Set<String> references, boolean success, String compileLog, @Nullable Throwable javacCrash) {
             this.output = output;
+            this.references = references;
             this.success = success;
             this.compileLog = compileLog;
             this.javacCrash = javacCrash;
