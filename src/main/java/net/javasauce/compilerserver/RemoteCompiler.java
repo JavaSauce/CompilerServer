@@ -8,7 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -41,7 +40,7 @@ class RemoteCompiler implements Compiler {
 
     private boolean exitRequested;
 
-    public RemoteCompiler(Path javaExecutable, List<String> jvmArgs, Collection<Path> compileClasspath) throws IOException {
+    public RemoteCompiler(Path javaExecutable, List<String> jvmArgs, List<String> args, Collection<Path> compileClasspath, Collection<Path> compileSourcepath) throws IOException {
         Path ourJarPath = getOurPath();
         if (OVERRIDE_PATH != null) {
             ourJarPath = Paths.get(OVERRIDE_PATH);
@@ -50,18 +49,18 @@ class RemoteCompiler implements Compiler {
             throw new RuntimeException("Unable to locate our own jar on the classpath. Please ensure it not shadowed, or provide the 'net.javasauce.RemoteCompiler.jar_Path' sysprop");
         }
 
-        List<String> args = new ArrayList<>();
-        args.add(javaExecutable.toAbsolutePath().toString());
+        List<String> procArgs = new ArrayList<>();
+        procArgs.add(javaExecutable.toAbsolutePath().toString());
         if (DEBUG) {
-            args.add("-Dnet.javasauce.RemoteCompiler.debug=true");
+            procArgs.add("-Dnet.javasauce.RemoteCompiler.debug=true");
         }
-        args.addAll(jvmArgs);
+        procArgs.addAll(jvmArgs);
 
-        args.add("-cp");
-        args.add(ourJarPath.toAbsolutePath().toString());
-        args.add(RemoteMain.class.getName());
+        procArgs.add("-cp");
+        procArgs.add(ourJarPath.toAbsolutePath().toString());
+        procArgs.add(RemoteMain.class.getName());
 
-        ProcessBuilder builder = new ProcessBuilder(args);
+        ProcessBuilder builder = new ProcessBuilder(procArgs);
         LOGGER.info("Starting Java compiler on vm {}", javaExecutable.toAbsolutePath());
 
         process = builder.start();
@@ -88,7 +87,11 @@ class RemoteCompiler implements Compiler {
         LOGGER.info("Sending configuration..");
 
         out.writeObject(new ConfigureCompilerPacket(
+                new ArrayList<>(args),
                 compileClasspath.stream()
+                        .map(e -> e.toAbsolutePath().toFile())
+                        .collect(Collectors.toList()),
+                compileSourcepath.stream()
                         .map(e -> e.toAbsolutePath().toFile())
                         .collect(Collectors.toList())
         ));

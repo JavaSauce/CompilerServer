@@ -71,7 +71,11 @@ public class RemoteMain {
         ConfigureCompilerPacket configuration = (ConfigureCompilerPacket) pkt;
 
         compiler = Compiler.forLocal(
+                configuration.args,
                 configuration.classPath.stream()
+                        .map(File::toPath)
+                        .collect(Collectors.toList()),
+                configuration.sourcePath.stream()
                         .map(File::toPath)
                         .collect(Collectors.toList())
         );

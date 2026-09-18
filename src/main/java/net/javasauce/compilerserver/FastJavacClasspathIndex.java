@@ -99,6 +99,11 @@ class FastJavacClasspathIndex implements Closeable {
         return new ForwardingJavaFileManager<JavaFileManager>(delegate) {
 
             @Override
+            public boolean hasLocation(Location location) {
+                return index.containsKey(location) || super.hasLocation(location);
+            }
+
+            @Override
             public String inferBinaryName(Location location, JavaFileObject file) {
                 if (file instanceof AbstractJavaFileObject) {
                     // Convert file name to 'binary name' `java/lang/Object.class` -> `java.lang.Object`
