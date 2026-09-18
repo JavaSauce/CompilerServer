@@ -11,20 +11,24 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 /**
  * Created by covers1624 on 8/29/25.
  */
 class LocalCompiler implements Compiler {
 
+    private final List<String> args;
     private final FastJavacClasspathIndex index;
     private final JavaCompiler compiler;
 
-    public LocalCompiler(Collection<Path> compileClasspath) throws IOException {
+    public LocalCompiler(List<String> args, Collection<Path> compileClasspath, Collection<Path> compileSourcepath) throws IOException {
+        this.args = args;
         index = new FastJavacClasspathIndex();
         for (Path path : compileClasspath) {
             index.addPath(StandardLocation.CLASS_PATH, path);
+        }
+        for (Path path : compileSourcepath) {
+            index.addPath(StandardLocation.SOURCE_PATH, path);
         }
         // TODO, FastJavacClasspathIndex doesn't support jmods. So, only handle the bootstrap classpath here.
         String bootClasspath = System.getProperty("sun.boot.class.path");
@@ -43,7 +47,8 @@ class LocalCompiler implements Compiler {
 
     @Override
     public CompileResult compile(Collection<CompileUnit> units, List<String> extraJavacArgs) {
-        List<String> args = new ArrayList<>();
+        List<String> args = new ArrayList<>(this.args);
+        // TODO should we demote -g and -proc:none to being supplied externally?
         args.add("-g");
         args.add("-proc:none");
         args.add("-XDuseUnsharedTable=true");

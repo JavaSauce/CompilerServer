@@ -40,7 +40,21 @@ public interface Compiler extends AutoCloseable {
      * @return The Compiler.
      */
     static Compiler of(Path javaExecutable, List<String> jvmArgs, Collection<Path> compileClasspath) throws IOException {
-        return new RemoteCompiler(javaExecutable, jvmArgs, compileClasspath);
+        return of(javaExecutable, jvmArgs, Collections.emptyList(), compileClasspath, Collections.emptyList());
+    }
+
+    /**
+     * Start a remote Java compiler server.
+     *
+     * @param javaExecutable    The Java executable of the jdk to use. Must have a compiler present.
+     * @param jvmArgs           Any additional JVM arguments.
+     * @param args              Compile arguments to be applied to all compile operations.
+     * @param compileClasspath  The compile classpath to use.
+     * @param compileSourcepath The source paths to use.
+     * @return The Compiler.
+     */
+    static Compiler of(Path javaExecutable, List<String> jvmArgs, List<String> args, Collection<Path> compileClasspath, Collection<Path> compileSourcepath) throws IOException {
+        return new RemoteCompiler(javaExecutable, jvmArgs, args, compileClasspath, compileSourcepath);
     }
 
     /**
@@ -50,7 +64,19 @@ public interface Compiler extends AutoCloseable {
      * @return The Compiler.
      */
     static Compiler forLocal(Collection<Path> compileClasspath) throws IOException {
-        return new LocalCompiler(compileClasspath);
+        return forLocal(Collections.emptyList(), compileClasspath, Collections.emptyList());
+    }
+
+    /**
+     * Create a wrapper around the Java compiler on the current jdk.
+     *
+     * @param args              Compile arguments to be applied to all compile operations.
+     * @param compileClasspath  The compile classpath to use.
+     * @param compileSourcepath The source paths to use.
+     * @return The Compiler.
+     */
+    static Compiler forLocal(List<String> args, Collection<Path> compileClasspath, Collection<Path> compileSourcepath) throws IOException {
+        return new LocalCompiler(args, compileClasspath, compileSourcepath);
     }
 
     /**

@@ -9,9 +9,13 @@ import java.util.List;
  */
 public class ConfigureCompilerPacket implements Serializable {
 
+    public final List<String> args;
     public final List<File> classPath;
+    public final List<File> sourcePath;
 
-    public ConfigureCompilerPacket(List<File> classPath) {
+    public ConfigureCompilerPacket(List<String> args, List<File> classPath, List<File> sourcePath) {
+        this.args = args;
         this.classPath = classPath;
+        this.sourcePath = sourcePath;
     }
 }
