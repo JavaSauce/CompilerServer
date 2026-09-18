@@ -6,10 +6,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.net.URI;
 import java.nio.file.Path;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * An abstract interface over Java's compiler tooling interface.
@@ -152,6 +149,11 @@ public interface Compiler extends AutoCloseable {
          */
         public final Map<String, byte[]> output;
         /**
+         * The internal name of all classpath/sourcepath classes which
+         * were required to compile the given units.
+         */
+        public final Set<String> references;
+        /**
          * If the operation was a success.
          */
         public final boolean success;
@@ -164,8 +166,9 @@ public interface Compiler extends AutoCloseable {
          */
         public final @Nullable Throwable javacCrash;
 
-        public CompileResult(Map<String, byte[]> output, boolean success, String compileLog, @Nullable Throwable javacCrash) {
+        public CompileResult(Map<String, byte[]> output, Set<String> references, boolean success, String compileLog, @Nullable Throwable javacCrash) {
             this.output = output;
+            this.references = references;
             this.success = success;
             this.compileLog = compileLog;
             this.javacCrash = javacCrash;

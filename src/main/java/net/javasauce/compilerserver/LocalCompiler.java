@@ -54,14 +54,14 @@ class LocalCompiler implements Compiler {
         args.add("-XDuseUnsharedTable=true");
         args.addAll(extraJavacArgs);
 
-        Map<String, byte[]> outputs = new LinkedHashMap<>();
+        LocalJavaFileManager fileManager = new LocalJavaFileManager(compiler);
         StringWriter logWriter = new StringWriter();
         boolean result = false;
         Throwable javacCrash = null;
         try {
             JavaCompiler.CompilationTask task = compiler.getTask(
                     logWriter,
-                    getFileManager(compiler, outputs),
+                    fileManager,
                     null,
                     args,
                     null,
@@ -75,7 +75,8 @@ class LocalCompiler implements Compiler {
             javacCrash = ex;
         }
         return new CompileResult(
-                outputs,
+                fileManager.outputs,
+                fileManager.references,
                 result,
                 logWriter.toString(),
                 javacCrash
@@ -85,43 +86,6 @@ class LocalCompiler implements Compiler {
     @Override
     public void close() throws IOException {
         index.close();
-    }
-
-    private JavaFileManager getFileManager(JavaCompiler compiler, Map<String, byte[]> outputs) {
-        return new ForwardingJavaFileManager<JavaFileManager>(index.fileManager(compiler.getStandardFileManager(null, null, null))) {
-            @Override
-            public JavaFileObject getJavaFileForOutput(Location location, String cName, JavaFileObject.Kind kind, FileObject sibling) {
-                return new SimpleJavaFileObject(URI.create("output:///" + cName + ".class"), kind) {
-                    @Override
-                    public OutputStream openOutputStream() {
-                        return new ByteArrayOutputStream() {
-                            @Override
-                            public void close() {
-                                outputs.put(cName.replace('.', '/') + ".class", toByteArray());
-                            }
-                        };
-                    }
-                };
-            }
-
-            @Override
-            public boolean hasLocation(Location location) {
-                // Mark annotation processor path as supported,
-                // Causes JavacProcessingEnvironment to query ANNOTATION_PROCESSOR_PATH instead of CLASS_PATH
-                if (location == StandardLocation.ANNOTATION_PROCESSOR_PATH) return true;
-
-                return super.hasLocation(location);
-            }
-
-            @Override
-            @Nullable
-            public ClassLoader getClassLoader(Location location) {
-                // Just return null for ANNOTATION_PROCESSOR_PATH, causes javac to just not try and load plugins.
-                if (location == StandardLocation.ANNOTATION_PROCESSOR_PATH) return null;
-
-                return super.getClassLoader(location);
-            }
-        };
     }
 
     private static class StringSource extends SimpleJavaFileObject {
@@ -136,6 +100,114 @@ class LocalCompiler implements Compiler {
         @Override
         public CharSequence getCharContent(boolean ignoreEncodingErrors) {
             return content;
+        }
+    }
+
+    private class LocalJavaFileManager extends ForwardingJavaFileManager<JavaFileManager> {
+
+        private final Map<String, byte[]> outputs = new LinkedHashMap<>();
+        private final Set<String> references = new LinkedHashSet<>();
+
+        public LocalJavaFileManager(JavaCompiler compiler) {
+            super(index.fileManager(compiler.getStandardFileManager(null, null, null)));
+        }
+
+        @Override
+        public JavaFileObject getJavaFileForOutput(Location location, String cName, JavaFileObject.Kind kind, FileObject sibling) {
+            return new SimpleJavaFileObject(URI.create("output:///" + cName + ".class"), kind) {
+                @Override
+                public OutputStream openOutputStream() {
+                    return new ByteArrayOutputStream() {
+                        @Override
+                        public void close() {
+                            outputs.put(cName.replace('.', '/') + ".class", toByteArray());
+                        }
+                    };
+                }
+            };
+        }
+
+        @Override
+        public boolean hasLocation(Location location) {
+            // Mark annotation processor path as supported,
+            // Causes JavacProcessingEnvironment to query ANNOTATION_PROCESSOR_PATH instead of CLASS_PATH
+            if (location == StandardLocation.ANNOTATION_PROCESSOR_PATH) return true;
+
+            return super.hasLocation(location);
+        }
+
+        @Override
+        @Nullable
+        public ClassLoader getClassLoader(Location location) {
+            // Just return null for ANNOTATION_PROCESSOR_PATH, causes javac to just not try and load plugins.
+            if (location == StandardLocation.ANNOTATION_PROCESSOR_PATH) return null;
+
+            return super.getClassLoader(location);
+        }
+
+        @Override
+        public Iterable<JavaFileObject> list(Location location, String packageName, Set<JavaFileObject.Kind> kinds, boolean recurse) throws IOException {
+            Iterable<JavaFileObject> list = super.list(location, packageName, kinds, recurse);
+            if (location != StandardLocation.SOURCE_PATH && location != StandardLocation.CLASS_PATH) return list;
+
+            int expectedSize = list instanceof Collection ? ((Collection<?>) list).size() : 0;
+            List<JavaFileObject> tracked = new ArrayList<>(expectedSize);
+            list.forEach(e -> tracked.add(new TrackedFileObject(e, location)));
+            return tracked;
+        }
+
+        @Override
+        public String inferBinaryName(Location location, JavaFileObject file) {
+            return super.inferBinaryName(location, unwrap(file));
+        }
+
+        @Override
+        public boolean isSameFile(FileObject a, FileObject b) {
+            return super.isSameFile(unwrap(a), unwrap(b));
+        }
+
+        @SuppressWarnings ("unchecked")
+        private <T extends FileObject> T unwrap(T obj) {
+            if (obj instanceof TrackedFileObject) {
+                return (T) ((TrackedFileObject) obj).delegate();
+            }
+            return obj;
+        }
+
+        private class TrackedFileObject extends ForwardingJavaFileObject<JavaFileObject> {
+
+            private final Location location;
+
+            public TrackedFileObject(JavaFileObject fileObject, Location location) {
+                super(fileObject);
+                this.location = location;
+            }
+
+            public JavaFileObject delegate() {
+                return fileObject;
+            }
+
+            private void onUsed() {
+                references.add(inferBinaryName(location, fileObject).replace('.', '/'));
+            }
+
+            @Override
+            public InputStream openInputStream() throws IOException {
+                onUsed();
+                return super.openInputStream();
+            }
+
+            @Override
+            public CharSequence getCharContent(boolean ignoreEncodingErrors) throws IOException {
+                onUsed();
+                return super.getCharContent(ignoreEncodingErrors);
+            }
+
+            @Override
+            public Reader openReader(boolean ignoreEncodingErrors) throws IOException {
+                onUsed();
+                return super.openReader(ignoreEncodingErrors);
+            }
         }
     }
 }
