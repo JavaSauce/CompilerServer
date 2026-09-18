@@ -7,6 +7,7 @@ import javax.lang.model.element.NestingKind;
 import javax.tools.ForwardingJavaFileManager;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
+import javax.tools.StandardLocation;
 import java.io.*;
 import java.net.URI;
 import java.nio.file.Files;
@@ -35,6 +36,12 @@ class FastJavacClasspathIndex implements Closeable {
 
     private final List<ZipFile> openZips = new ArrayList<>();
     private final Map<JavaFileManager.Location, Map<String, List<JavaFileObject>>> index = new HashMap<>();
+
+    public FastJavacClasspathIndex() {
+        // Always have an index entry for CLASS_PATH, this ensures we don't
+        // delegate to the parent JavaFileManager when we don't have any reference classes.
+        index.put(StandardLocation.CLASS_PATH, new HashMap<>());
+    }
 
     public void addPath(JavaFileManager.Location location, Path path) throws IOException {
         if (Files.notExists(path)) return;
@@ -107,6 +114,8 @@ class FastJavacClasspathIndex implements Closeable {
 
             @Override
             public Iterable<JavaFileObject> list(Location location, String packageName, Set<JavaFileObject.Kind> kinds, boolean recurse) throws IOException {
+                // We always insert a CLASS_PATH entry into this index to avoid delegating to super
+                // and picking up compile dependencies from CompilerServer's invoked classpath.
                 Map<String, List<JavaFileObject>> locationIndex = index.get(location);
                 if (locationIndex == null) {
                     return super.list(location, packageName, kinds, recurse);
