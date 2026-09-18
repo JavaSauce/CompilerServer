@@ -2,6 +2,7 @@ package net.javasauce.compilerserver;
 
 import net.javasauce.compilerserver.packet.CompileRequestPacket;
 import net.javasauce.compilerserver.packet.CompileResultPacket;
+import net.javasauce.compilerserver.packet.ConfigureCompilerPacket;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,10 +60,6 @@ class RemoteCompiler implements Compiler {
         args.add("-cp");
         args.add(ourJarPath.toAbsolutePath().toString());
         args.add(RemoteMain.class.getName());
-        args.addAll(compileClasspath.stream()
-                .map(e -> e.toAbsolutePath().toString())
-                .collect(Collectors.toList())
-        );
 
         ProcessBuilder builder = new ProcessBuilder(args);
         LOGGER.info("Starting Java compiler on vm {}", javaExecutable.toAbsolutePath());
@@ -87,6 +84,14 @@ class RemoteCompiler implements Compiler {
         LOGGER.info("Negotiating..");
         in = new RemoteCompilerObjectInputStream(process.getInputStream());
         out = new ObjectOutputStream(process.getOutputStream());
+        out.flush();
+        LOGGER.info("Sending configuration..");
+
+        out.writeObject(new ConfigureCompilerPacket(
+                compileClasspath.stream()
+                        .map(e -> e.toAbsolutePath().toFile())
+                        .collect(Collectors.toList())
+        ));
         out.flush();
 
         readThread = new Thread(() -> {

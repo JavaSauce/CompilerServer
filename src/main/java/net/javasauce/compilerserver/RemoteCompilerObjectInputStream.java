@@ -2,11 +2,9 @@ package net.javasauce.compilerserver;
 
 import net.javasauce.compilerserver.packet.CompileRequestPacket;
 import net.javasauce.compilerserver.packet.CompileResultPacket;
+import net.javasauce.compilerserver.packet.ConfigureCompilerPacket;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectStreamClass;
+import java.io.*;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -39,10 +37,12 @@ class RemoteCompilerObjectInputStream extends ObjectInputStream {
         allowedPackages.add("java.lang");
 
         addAllowedClass(URI.class);
+        addAllowedClass(File.class);
         addAllowedClass(CompileRequestPacket.class);
         addAllowedClass(CompileResultPacket.class);
         addAllowedClass(Compiler.CompileUnit.class);
         addAllowedClass(Compiler.CompileResult.class);
+        addAllowedClass(ConfigureCompilerPacket.class);
     }
 
     public void addAllowedClass(Class<?> clazz) {
